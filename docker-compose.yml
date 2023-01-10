@@ -1,0 +1,53 @@
+version: "3.8"
+services:
+  dbapinest:
+    container_name: bdapitienda
+    image: postgres:14.3
+    restart: always
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    networks: 
+      netapache:
+          ipv4_address: 172.140.11.3
+  
+  ApiTienda:
+    container_name: apitienda
+    image: ub-base-apitienda
+    restart: always
+    build:
+      context: ${DIR_DFILES}/api-tienda/
+      dockerfile: ./Dockerfile
+      args:
+        - USUARIO=${USUARIO}
+        - PASSWD=${PASSWD}
+        - PROYECTO=${PROYECTO}
+        - DB_HOST=${DB_HOST}
+        - DB_NAME=${DB_NAME}
+        - DB_USER=${DB_USER}
+        - DB_PASS=${DB_PASS}
+        - DB_PORT=${DB_PORT}
+        - URL_GIT=${URL_GIT}
+        - W_PORT=${W_PORT}
+    env_file:
+       - ./.env
+    ports:
+      - ${W_PORT}:3000
+    volumes:
+      - ./web:/var/www/html
+      - ./logs:/var/logs
+    networks: 
+      netapache:
+          ipv4_address: 172.140.11.4
+
+networks: 
+  netapache:
+      ipam: 
+          driver: default
+          config: 
+              - subnet: 172.140.11.0/24
